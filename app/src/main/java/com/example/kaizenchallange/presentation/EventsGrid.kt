@@ -56,14 +56,16 @@ fun EventItem(
     event: Event,
     onStarClick: () -> Unit
 ) {
-    var timeLeft by remember {
+    // The key is needed here. If we don't provide it, timeLeft would remember its last state even if
+    // the whole item is changed, which happens when a filter is applied for example.
+    var timeLeft by remember(key1 = event.id) {
         mutableIntStateOf((event.startTime - System.currentTimeMillis() / 1000).toInt())
     }
     
     LaunchedEffect(key1 = timeLeft) {
         // IO dispatcher works better in parallel than the Default dispatcher.
-        // Since there's a lot of event items launching this coroutine, we've decided to move them
-        // to the IO dispatcher.
+        // Since there's a lot of event items launching this coroutine at the same time, we've
+        // decided to move them to the IO dispatcher.
         withContext(Dispatchers.IO) {
             if (timeLeft > 0) {
                 delay(1000L)
