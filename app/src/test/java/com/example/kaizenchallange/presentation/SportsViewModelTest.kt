@@ -30,31 +30,31 @@ class SportsViewModelTest {
 
     @Test
     fun `sportsFavoriteFilter update`() = runTest {
-        assertEquals(emptyList<String>(), viewmodel.sportsFavoriteFilter.value)
+        assertEquals(emptyList<String>(), viewmodel.sportsFavoriteToggleList.value)
 
         viewmodel.toggleSportFavoriteFilter("FOOT", true)
         viewmodel.toggleSportFavoriteFilter("TENNIS", true)
 
         var expected = listOf("FOOT", "TENNIS")
 
-        assertEquals(expected, viewmodel.sportsFavoriteFilter.value)
+        assertEquals(expected, viewmodel.sportsFavoriteToggleList.value)
 
         viewmodel.toggleSportFavoriteFilter("TENNIS", false)
 
         expected = listOf("FOOT")
 
-        assertEquals(expected, viewmodel.sportsFavoriteFilter.value)
+        assertEquals(expected, viewmodel.sportsFavoriteToggleList.value)
     }
 
     @Test
     fun `sportsState on load`() = runTest {
         val collectJob = launch(UnconfinedTestDispatcher(testScheduler)) {
-            viewmodel.sportsState.collect {}
+            viewmodel.filteredSportsState.collect {}
         }
 
         val expected = DataState(getKaizenBigDataMock(), isLoading = false, error = null)
 
-        assertEquals(expected, viewmodel.sportsState.value)
+        assertEquals(expected, viewmodel.filteredSportsState.value)
 
         collectJob.cancel()
     }
@@ -62,7 +62,7 @@ class SportsViewModelTest {
     @Test
     fun `sportsState after adding a favorite`() = runTest {
         val collectJob = launch(UnconfinedTestDispatcher(testScheduler)) {
-            viewmodel.sportsState.collect {}
+            viewmodel.filteredSportsState.collect {}
         }
 
         val fullData = getKaizenBigDataMock()
@@ -85,7 +85,7 @@ class SportsViewModelTest {
             error = null
         )
 
-        assertEquals(expected, viewmodel.sportsState.value)
+        assertEquals(expected, viewmodel.filteredSportsState.value)
 
         collectJob.cancel()
     }
@@ -93,7 +93,7 @@ class SportsViewModelTest {
     @Test
     fun `sportsState after removing a favorite`() = runTest {
         val collectJob = launch(UnconfinedTestDispatcher(testScheduler)) {
-            viewmodel.sportsState.collect {}
+            viewmodel.filteredSportsState.collect {}
         }
 
         val fullData = getKaizenBigDataMock()
@@ -113,7 +113,7 @@ class SportsViewModelTest {
         ) }
 
         // First we secured that the filter works after adding a favorite
-        assertEquals(expected, viewmodel.sportsState.value.data)
+        assertEquals(expected, viewmodel.filteredSportsState.value.data)
 
         // Then we remove the favorite
         viewmodel.removeFavoriteEvent("TENNIS Brazil-Spain")
@@ -127,7 +127,7 @@ class SportsViewModelTest {
         ) }
 
         // New filter check
-        assertEquals(expected, viewmodel.sportsState.value.data)
+        assertEquals(expected, viewmodel.filteredSportsState.value.data)
 
         collectJob.cancel()
     }
@@ -135,7 +135,7 @@ class SportsViewModelTest {
     @Test
     fun `sportsState after untoggling a favorite sport`() = runTest {
         val collectJob = launch(UnconfinedTestDispatcher(testScheduler)) {
-            viewmodel.sportsState.collect {}
+            viewmodel.filteredSportsState.collect {}
         }
 
         val fullData = getKaizenBigDataMock()
@@ -155,7 +155,7 @@ class SportsViewModelTest {
         ) }
 
         // First we secured that the filter works after adding a favorite
-        assertEquals(expected, viewmodel.sportsState.value.data)
+        assertEquals(expected, viewmodel.filteredSportsState.value.data)
 
         // Then we untoggle the favorite filter for TENNIS
         viewmodel.toggleSportFavoriteFilter("TENNIS", false)
@@ -169,7 +169,7 @@ class SportsViewModelTest {
         ) }
 
         // New filter check
-        assertEquals(expected, viewmodel.sportsState.value.data)
+        assertEquals(expected, viewmodel.filteredSportsState.value.data)
 
         collectJob.cancel()
     }

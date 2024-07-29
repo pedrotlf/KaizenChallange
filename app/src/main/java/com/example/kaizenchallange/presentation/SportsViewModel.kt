@@ -23,8 +23,11 @@ class SportsViewModel(
     private val _favoriteEvents = repository.getFavoriteEventsList()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
 
-    private val _sportsFavoriteFilter = MutableStateFlow((emptyList<String>()))
-    val sportsFavoriteFilter: StateFlow<List<String>> = _sportsFavoriteFilter
+    private val _sportsFavoriteToggleList = MutableStateFlow((emptyList<String>()))
+    /**
+     * Returns a state flow of the sports which the user chose to filter only favorite events.
+     */
+    val sportsFavoriteToggleList: StateFlow<List<String>> = _sportsFavoriteToggleList
 
     /**
      * Returns a state flow of the sports list after updating every event with its corresponding
@@ -42,9 +45,9 @@ class SportsViewModel(
 
     /**
      * Returns a state flow of the sports list but filtering out events that are not favorite for sports
-     * where the user has toggled their respective favorite filter.
+     * which the user chose to filter only favorite events.
      */
-    val sportsState = combine(_sportsUpdatedState, _sportsFavoriteFilter) { updatedState, favoritesFilter ->
+    val filteredSportsState = combine(_sportsUpdatedState, _sportsFavoriteToggleList) { updatedState, favoritesFilter ->
         updatedState.copy(
             data = updatedState.data?.map { sport -> sport.copy(
                 events = sport.events.filter {
@@ -93,7 +96,7 @@ class SportsViewModel(
     }
 
     fun toggleSportFavoriteFilter(sportId: String, toggle: Boolean) {
-        _sportsFavoriteFilter.update { filterMap ->
+        _sportsFavoriteToggleList.update { filterMap ->
             if (toggle) {
                 filterMap + sportId
             } else {

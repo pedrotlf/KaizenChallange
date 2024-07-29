@@ -45,8 +45,8 @@ fun SportsList(
     modifier: Modifier = Modifier,
     lazyListState: LazyListState = rememberLazyListState()
 ) {
-    val state by viewModel.sportsState.collectAsState()
-    val sportsFavoriteFilter by viewModel.sportsFavoriteFilter.collectAsState()
+    val state by viewModel.filteredSportsState.collectAsState()
+    val sportsFavoriteFilter by viewModel.sportsFavoriteToggleList.collectAsState()
     val isExpandedMap = rememberSaveable(saver = snapshotStateListSaver()) {
         mutableStateListOf()
     }
