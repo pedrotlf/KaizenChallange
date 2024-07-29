@@ -24,7 +24,7 @@ With Room I could create a local data base that simply stored the id of each eve
 
 But I still needed to filter out unfavorite events only when the user toggles the favorite button. And it was simply resolved by creating a simple stateflow in the viewmodel which holds a list of favorite toggled sports. And finally, _combine()_ it with our updated sports list to obtain the final filtered sports list.
 
-## Performances issues
+## Performance issue
 We can notice a bad performance when trying to expand a sport that has many events. This may be due to the fact that when we expand the sport, even if we don't see all of its items, they are all getting loaded. Another reason would also be the amount of threads executing the countdown timer.
 
 Lots of items and lots of threads and they are not being recycled.. this might be the reason.
