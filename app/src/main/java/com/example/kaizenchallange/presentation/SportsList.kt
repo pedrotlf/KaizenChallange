@@ -1,6 +1,5 @@
 package com.example.kaizenchallange.presentation
 
-import androidx.compose.animation.animateColor
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.updateTransition
 import androidx.compose.foundation.clickable
@@ -17,14 +16,19 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.toMutableStateMap
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -44,12 +48,11 @@ fun SportsList(
     modifier: Modifier = Modifier,
     lazyListState: LazyListState = rememberLazyListState()
 ) {
-    val state = viewModel.sportsState
+    val state by viewModel.sportsState.collectAsState(DataState())
     val isExpandedMap = rememberSaveable(
-        state.data,
         saver = snapshotStateMapSaver()
     ) {
-        state.data?.map { sport -> sport.id to true }.orEmpty()
+        state.data?.map { sport -> sport.id to false }.orEmpty()
             .toMutableStateMap()
     }
 
@@ -66,9 +69,19 @@ fun SportsList(
         ) { sport ->
             SportItem(
                 sport = sport,
-                isExpanded = isExpandedMap[sport.id] ?: true,
+                isExpanded = isExpandedMap[sport.id] ?: false,
                 onClickExpanded = {
-                    isExpandedMap[sport.id] = (isExpandedMap[sport.id] ?: true).not()
+                    isExpandedMap[sport.id] = (isExpandedMap[sport.id] ?: false).not()
+                },
+                onFavoriteFilterToggle = { toggle ->
+                    viewModel.toggleSportFavoriteFilter(sport.id, toggle)
+                },
+                onFavoriteStarClick = { eventId, isFavorite ->
+                    if (isFavorite) {
+                        viewModel.addFavoriteEvent(eventId)
+                    } else {
+                        viewModel.removeFavoriteEvent(eventId)
+                    }
                 }
             )
         }
@@ -109,7 +122,9 @@ private fun ShowListError(state: DataState<List<Sport>>) {
 fun SportItem(
     sport: Sport,
     isExpanded: Boolean,
-    onClickExpanded: () -> Unit
+    onClickExpanded: () -> Unit,
+    onFavoriteFilterToggle: (Boolean) -> Unit,
+    onFavoriteStarClick: (String, Boolean) -> Unit
 ) {
     val transition = updateTransition(targetState = isExpanded, label = "transition")
 
@@ -120,13 +135,6 @@ fun SportItem(
             180f
         }
     }
-//    val color by transition.animateColor(label = "color change") { state ->
-//        if (state) {
-//            Color.Black.copy(.4f)
-//        } else {
-//            MaterialTheme.colorScheme.surface
-//        }
-//    }
 
     Card(
         colors = CardDefaults.cardColors(containerColor = Color.Black.copy(.4f))
@@ -140,18 +148,38 @@ fun SportItem(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(8.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(text = sport.name)
-                Icon(
-                    imageVector = Icons.Default.KeyboardArrowUp,
-                    contentDescription = null,
-                    modifier = Modifier
-                        .rotate(iconRotationDeg)
-                        .clickable {
-                            onClickExpanded()
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    var checked by remember { mutableStateOf(false) }
+                    Switch(
+                        checked = checked,
+                        onCheckedChange = {
+                            checked = it
+                            onFavoriteFilterToggle(it)
+                        },
+                        thumbContent = {
+                            Icon(
+                                imageVector = Icons.Default.Star,
+                                contentDescription = null,
+                            )
                         }
-                )
+                    )
+                    Icon(
+                        imageVector = Icons.Default.KeyboardArrowUp,
+                        contentDescription = null,
+                        modifier = Modifier
+                            .rotate(iconRotationDeg)
+                            .clickable {
+                                onClickExpanded()
+                            }
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -159,7 +187,12 @@ fun SportItem(
             ExpandableContent(
                 isExpanded = isExpanded
             ) {
-                EventsGrid(sport.events)
+                EventsGrid(
+                    eventList = sport.events,
+                    onStarClick = { eventId, isFavorite ->
+                        onFavoriteStarClick(eventId, isFavorite)
+                    }
+                )
             }
         }
     }

@@ -1,11 +1,15 @@
 package com.example.kaizenchallange.presentation
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -25,7 +29,8 @@ import kotlinx.coroutines.delay
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun EventsGrid(
-    eventList: List<Event>
+    eventList: List<Event>,
+    onStarClick: (String, Boolean) -> Unit
 ) {
     FlowRow(
         modifier = Modifier.fillMaxWidth(),
@@ -34,14 +39,20 @@ fun EventsGrid(
         maxItemsInEachRow = 4
     ) {
         eventList.forEach { event ->
-            EventItem(event = event)
+            EventItem(
+                event = event,
+                onStarClick = {
+                    onStarClick(event.id, event.isFavorite.not())
+                }
+            )
         }
     }
 }
 
 @Composable
 fun EventItem(
-    event: Event
+    event: Event,
+    onStarClick: () -> Unit
 ) {
     var timeLeft by remember {
         mutableIntStateOf((event.startTime - System.currentTimeMillis() / 1000).toInt())
@@ -63,6 +74,14 @@ fun EventItem(
         } else {
             Text(text = "Game Started", color = Color.DarkGray)
         }
+        Icon(
+            imageVector = Icons.Default.Star,
+            tint = if (event.isFavorite) Color.Yellow else Color.DarkGray,
+            contentDescription = null,
+            modifier = Modifier.clickable {
+                onStarClick()
+            }
+        )
         if (event.competitor1.isNullOrBlank().not()) {
             Text(text = event.competitor1.orEmpty(), textAlign = TextAlign.Center)
             Text(text = "vs", color = Color.Red, textAlign = TextAlign.Center)

@@ -6,5 +6,6 @@ data class Event(
     val eventName: String,
     val startTime: Int,
     val competitor1: String?,
-    val competitor2: String?
+    val competitor2: String?,
+    val isFavorite: Boolean = false
 )

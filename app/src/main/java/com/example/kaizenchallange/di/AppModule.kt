@@ -1,6 +1,8 @@
 package com.example.kaizenchallange.di
 
 import android.content.Context
+import androidx.room.Room
+import com.example.kaizenchallange.data.local.FavoritesDatabase
 import com.example.kaizenchallange.data.remote.KaizenApi
 import com.example.kaizenchallange.data.repository.KaizenRepositoryImpl
 import com.example.kaizenchallange.domain.repository.KaizenRepository
@@ -11,6 +13,7 @@ import retrofit2.create
 interface AppModule {
     val kaizenApi: KaizenApi
     val kaizenRepository: KaizenRepository
+    val favoritesDatabase: FavoritesDatabase
 }
 
 class AppModuleImpl(
@@ -24,6 +27,13 @@ class AppModuleImpl(
             .create()
     }
     override val kaizenRepository: KaizenRepository by lazy {
-        KaizenRepositoryImpl(kaizenApi)
+        KaizenRepositoryImpl(kaizenApi, favoritesDatabase.dao)
+    }
+    override val favoritesDatabase: FavoritesDatabase by lazy {
+        Room.databaseBuilder(
+            appContext,
+            FavoritesDatabase::class.java,
+            "favorites.db"
+        ).build()
     }
 }
