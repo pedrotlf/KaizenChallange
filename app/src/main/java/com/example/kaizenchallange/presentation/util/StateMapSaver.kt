@@ -1,14 +1,14 @@
 package com.example.kaizenchallange.presentation.util
 
-import androidx.compose.runtime.mutableStateMapOf
-import androidx.compose.runtime.saveable.Saver
-import androidx.compose.runtime.snapshots.SnapshotStateMap
-import androidx.compose.runtime.toMutableStateMap
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.saveable.listSaver
+import androidx.compose.runtime.snapshots.SnapshotStateList
+import androidx.compose.runtime.toMutableStateList
 
-fun <K, V> snapshotStateMapSaver() = Saver<SnapshotStateMap<K, V>, Any>(
-    save = { state -> state.toList() },
+fun <T: Any> snapshotStateListSaver() = listSaver<SnapshotStateList<T>, Any>(
+    save = { stateList -> stateList.toList() },
     restore = { value ->
         @Suppress("UNCHECKED_CAST")
-        (value as? List<Pair<K, V>>)?.toMutableStateMap() ?: mutableStateMapOf()
+        (value as? List<T>)?.toMutableStateList() ?: mutableStateListOf()
     }
 )

@@ -25,8 +25,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.toMutableStateMap
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
@@ -37,7 +37,7 @@ import com.example.kaizenchallange.domain.sports.Sport
 import com.example.kaizenchallange.presentation.expandablecontent.ExpandableContent
 import com.example.kaizenchallange.presentation.pullrefresh.PullToRefreshLazyColumn
 import com.example.kaizenchallange.presentation.util.DataState
-import com.example.kaizenchallange.presentation.util.snapshotStateMapSaver
+import com.example.kaizenchallange.presentation.util.snapshotStateListSaver
 
 @Composable
 fun SportsList(
@@ -47,11 +47,8 @@ fun SportsList(
 ) {
     val state by viewModel.sportsState.collectAsState()
     val sportsFavoriteFilter by viewModel.sportsFavoriteFilter.collectAsState()
-    val isExpandedMap = rememberSaveable(
-        saver = snapshotStateMapSaver()
-    ) {
-        state.data?.map { sport -> sport.id to false }.orEmpty()
-            .toMutableStateMap()
+    val isExpandedMap = rememberSaveable(saver = snapshotStateListSaver()) {
+        mutableStateListOf()
     }
 
     Box(
@@ -67,10 +64,13 @@ fun SportsList(
         ) { sport ->
             SportItem(
                 sport = sport,
-                isExpanded = isExpandedMap[sport.id] ?: false,
-                isFavoriteFiltering = sportsFavoriteFilter[sport.id] ?: false,
-                onClickExpanded = {
-                    isExpandedMap[sport.id] = (isExpandedMap[sport.id] ?: false).not()
+                isExpanded = isExpandedMap.contains(sport.id),
+                isFavoriteFiltering = sportsFavoriteFilter.contains(sport.id),
+                onClickExpanded = { willExpand ->
+                    if (willExpand)
+                        isExpandedMap.add(sport.id)
+                    else
+                        isExpandedMap.remove(sport.id)
                 },
                 onFavoriteFilterToggle = { toggle ->
                     viewModel.toggleSportFavoriteFilter(sport.id, toggle)
@@ -122,7 +122,7 @@ fun SportItem(
     sport: Sport,
     isExpanded: Boolean,
     isFavoriteFiltering: Boolean,
-    onClickExpanded: () -> Unit,
+    onClickExpanded: (Boolean) -> Unit,
     onFavoriteFilterToggle: (Boolean) -> Unit,
     onFavoriteStarClick: (String, Boolean) -> Unit
 ) {
@@ -174,7 +174,7 @@ fun SportItem(
                         modifier = Modifier
                             .rotate(iconRotationDeg)
                             .clickable {
-                                onClickExpanded()
+                                onClickExpanded(isExpanded.not())
                             }
                     )
                 }
