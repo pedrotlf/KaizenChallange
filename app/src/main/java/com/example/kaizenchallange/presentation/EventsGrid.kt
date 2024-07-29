@@ -24,7 +24,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.kaizenchallange.domain.sports.Event
 import com.example.kaizenchallange.presentation.util.formatTime
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.withContext
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -59,9 +61,14 @@ fun EventItem(
     }
     
     LaunchedEffect(key1 = timeLeft) {
-        while (timeLeft > 0) {
-            delay(1000L)
-            timeLeft = (event.startTime - System.currentTimeMillis() / 1000).toInt()
+        // IO dispatcher works better in parallel than the Default dispatcher.
+        // Since there's a lot of event items launching this coroutine, we've decided to move them
+        // to the IO dispatcher.
+        withContext(Dispatchers.IO) {
+            if (timeLeft > 0) {
+                delay(1000L)
+                timeLeft = (event.startTime - System.currentTimeMillis() / 1000).toInt()
+            }
         }
     }
     
