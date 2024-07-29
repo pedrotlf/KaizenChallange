@@ -48,7 +48,8 @@ fun SportsList(
     modifier: Modifier = Modifier,
     lazyListState: LazyListState = rememberLazyListState()
 ) {
-    val state by viewModel.sportsState.collectAsState(DataState())
+    val state by viewModel.sportsState.collectAsState()
+    val sportsFavoriteFilter by viewModel.sportsFavoriteFilter.collectAsState()
     val isExpandedMap = rememberSaveable(
         saver = snapshotStateMapSaver()
     ) {
@@ -70,6 +71,7 @@ fun SportsList(
             SportItem(
                 sport = sport,
                 isExpanded = isExpandedMap[sport.id] ?: false,
+                isFavoriteFiltering = sportsFavoriteFilter[sport.id] ?: false,
                 onClickExpanded = {
                     isExpandedMap[sport.id] = (isExpandedMap[sport.id] ?: false).not()
                 },
@@ -86,12 +88,12 @@ fun SportsList(
             )
         }
 
-        ShowListError(state)
+        SportsListError(state)
     }
 }
 
 @Composable
-private fun ShowListError(state: DataState<List<Sport>>) {
+private fun SportsListError(state: DataState<List<Sport>>) {
     if (state.isLoading.not()) {
         Box(
             modifier = Modifier.fillMaxSize(),
@@ -122,6 +124,7 @@ private fun ShowListError(state: DataState<List<Sport>>) {
 fun SportItem(
     sport: Sport,
     isExpanded: Boolean,
+    isFavoriteFiltering: Boolean,
     onClickExpanded: () -> Unit,
     onFavoriteFilterToggle: (Boolean) -> Unit,
     onFavoriteStarClick: (String, Boolean) -> Unit
@@ -156,11 +159,9 @@ fun SportItem(
                     horizontalArrangement = Arrangement.spacedBy(16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    var checked by remember { mutableStateOf(false) }
                     Switch(
-                        checked = checked,
+                        checked = isFavoriteFiltering,
                         onCheckedChange = {
-                            checked = it
                             onFavoriteFilterToggle(it)
                         },
                         thumbContent = {

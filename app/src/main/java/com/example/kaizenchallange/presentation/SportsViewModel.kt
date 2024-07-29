@@ -6,15 +6,14 @@ import com.example.kaizenchallange.domain.repository.KaizenRepository
 import com.example.kaizenchallange.domain.sports.Sport
 import com.example.kaizenchallange.domain.util.Resource
 import com.example.kaizenchallange.presentation.util.DataState
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalCoroutinesApi::class)
 class SportsViewModel(
     private val repository: KaizenRepository
 ): ViewModel() {
@@ -25,7 +24,12 @@ class SportsViewModel(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
 
     private val _sportsFavoriteFilter = MutableStateFlow((emptyMap<String, Boolean>()))
+    val sportsFavoriteFilter: StateFlow<Map<String, Boolean>> = _sportsFavoriteFilter
 
+    /**
+     * Returns a state flow of the sports list after updating every event with its corresponding
+     * 'favorite' state restored from the local database.
+     */
     private val _sportsUpdatedState = combine(_sportsState, _favoriteEvents) { state, favoriteEvents ->
         state.copy(
             data = state.data?.map { sport -> sport.copy(
@@ -34,8 +38,12 @@ class SportsViewModel(
                 ) }
             ) }
         )
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), DataState())
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), DataState())
 
+    /**
+     * Returns a state flow of the sports list but filtering out events that are not favorite for sports
+     * where the user has toggled their respective favorite filter.
+     */
     val sportsState = combine(_sportsUpdatedState, _sportsFavoriteFilter) { updatedState, favoritesFilter ->
         updatedState.copy(
             data = updatedState.data?.map { sport -> sport.copy(
@@ -47,7 +55,7 @@ class SportsViewModel(
                 }
             ) }
         )
-    }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), DataState())
 
     init {
         loadSports()
