@@ -94,8 +94,7 @@ class SportsViewModel(
 
     fun toggleSportFavoriteFilter(sportId: String, toggle: Boolean) {
         _sportsFavoriteFilter.update { filterMap ->
-            val newMap = filterMap.toMutableMap().also { it[sportId] = toggle }
-            newMap
+            filterMap + (sportId to toggle)
         }
     }
 }
