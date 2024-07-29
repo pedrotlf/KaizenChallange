@@ -57,7 +57,8 @@ fun EventItem(
     onStarClick: () -> Unit
 ) {
     // The key is needed here. If we don't provide it, timeLeft will remember its last state even if
-    // the event is changed, which happens when a filter is applied for example.
+    // the event is changed, which happens when a filter is applied for example. The event.id as the
+    // key guarantees that even with if the event changes, the timeLeft will also change accordingly.
     var timeLeft by remember(key1 = event.id) {
         mutableIntStateOf((event.startTime - System.currentTimeMillis() / 1000).toInt())
     }
